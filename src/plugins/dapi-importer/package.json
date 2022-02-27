@@ -1,0 +1,38 @@
+{
+  "name": "dapi-importer",
+  "version": "0.0.0",
+  "description": "This is the description of the plugin.",
+  "strapi": {
+    "name": "dapi-importer",
+    "description": "Description of dapi-importer plugin",
+    "kind": "plugin"
+  },
+  "author": {
+    "name": "A Strapi developer"
+  },
+  "maintainers": [
+    {
+      "name": "A Strapi developer"
+    }
+  ],
+  "engines": {
+    "node": ">=12.x.x <=16.x.x",
+    "npm": ">=6.0.0"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@strapi/strapi": "^4.0.0"
+  },
+  "devDependencies": {
+    "@strapi/design-system": "^0.0.1-alpha.76",
+    "@strapi/helper-plugin": "^4.1.1",
+    "@strapi/icons": "^0.0.1-alpha.76",
+    "@strapi/utils": "^4.1.1",
+    "styled-components": "^5.3.3"
+  },
+  "dependencies": {
+    "axios": "^0.26.0",
+    "lodash": "^4.17.21",
+    "mime-types": "^2.1.34"
+  }
+}
