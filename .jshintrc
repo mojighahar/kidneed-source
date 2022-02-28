@@ -1,0 +1,5 @@
+{
+  "node": true,
+  "esversion": 11,
+  "globals": { "strapi": true }
+}

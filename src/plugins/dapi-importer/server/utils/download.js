@@ -1,8 +1,12 @@
 var https = require("https");
 var fs = require("fs");
 
-module.exports = async (url, dest) => {
+async function download(url, dest, repeat = 0, err = null) {
   return new Promise((resolve, reject) => {
+    if (repeat > 2) {
+      reject(err.message);
+    }
+
     const file = fs.createWriteStream(dest);
 
     https
@@ -15,8 +19,9 @@ module.exports = async (url, dest) => {
         });
       })
       .on("error", function (err) {
-        fs.unlink(dest, () => console.log("unlink"));
-        reject(err.message);
+        fs.unlink(dest, () => download(url, dest, repeat + 1, err));
       });
   });
-};
+}
+
+module.exports = download;

@@ -1,98 +1,47 @@
 "use strict";
 
-const axios = require("axios");
 const validateSchema = require("./validations/schema");
-const download = require("../utils/download");
-const path = require("path");
-const os = require("os");
 const fs = require("fs");
-const mime = require("mime-types");
+const modelUID = require("../utils/model-uid");
+const Importer = require("../utils/importer");
+const getResource = require("../utils/get-resource");
+const downloadResource = require("../utils/download-resource");
 
-let status = {
-  running: false,
-  processed: 0,
-  saved: 0,
-  currentPage: "https://dapi.kidneed.ir/dev/content/?format=json",
-  lastRun: null,
-  description: [],
+const importer = Importer("https://dapi.kidneed.ir/dev/content/?format=json");
+
+const run = (uid) => {
+  importer.run(uid);
+  processRecords(uid);
 };
 
-const updateStatusDescription = (description) => {
-  console.log(description);
-  status.description.push(description);
-};
-
-const filename = (url) => {
-  return url.split("/").at(-1);
-};
-
-const run = (contentService, contentQuery) => {
-  if (status.running) {
-    return;
-  }
-
-  status = {
-    ...status,
-    running: true,
-    lastRun: new Date(),
-  };
-  processRecords(contentService, contentQuery);
-};
-
-const stop = () => {
-  status = {
-    ...status,
-    running: false,
-  };
-};
-
-const getRecords = async (url) => {
-  const response = await axios.get(url);
-
-  return response.data;
-};
-
-const fileData = async (url) => {
+const fileInfo = async (url) => {
   if (!url) {
     return;
   }
 
-  const dest = tempFilePath(url);
-  updateStatusDescription(`downloading ${url}`);
+  importer.log("downloading", url);
 
   try {
-    await download(url, dest);
+    const file = await downloadResource(url);
+    importer.log("downloaded", url);
+    return file;
   } catch (e) {
-    updateStatusDescription(`error happened while downloading: ${e.message}`);
-    return null;
+    importer.log("download failed", `${url}(${e.message})`, "error");
   }
 
-  const stats = fs.statSync(dest);
-  updateStatusDescription(`downloaded ${url}`);
-
-  return {
-    path: dest,
-    name: filename(url),
-    size: stats.size,
-    type: mime.lookup(dest),
-  };
+  return null;
 };
 
-const findRecord = async (contentQuery, uuid) => {
-  const result = await contentQuery.findMany({ where: { uuid } });
+const findRecord = async (uid, record) => {
+  const result = await strapi
+    .query(uid)
+    .findMany({ where: { uuid: record.uuid } });
 
-  return result.length > 0;
+  return result.length > 0 ? result[0] : null;
 };
 
-const saveRecord = async (record, contentService, contentQuery) => {
-  updateStatusDescription(`process ${record.uuid} record`);
-
-  if (await findRecord(contentQuery, record.uuid)) {
-    updateStatusDescription(`repeated ${record.uuid} record`);
-    return;
-  }
-
-  const downloadedFile = await fileData(record.src_file);
+const persistRecord = async (uid, record) => {
+  const resource = await fileInfo(record.src_file);
   const params = {
     data: {
       uuid: record.uuid,
@@ -108,107 +57,89 @@ const saveRecord = async (record, contentService, contentQuery) => {
     },
   };
 
-  if (downloadedFile) {
-    params["files"] = [downloadedFile];
+  if (resource) {
+    params.files = [resource];
   }
 
-  await contentService.create(params);
+  await strapi.service(uid).create(params);
+  importer.persisted(record.uuid);
 
-  status.saved += 1;
-  updateStatusDescription(`saved ${record.uuid} record`);
-  if (downloadedFile) {
-    await fs.unlink(downloadedFile.path, () =>
-      updateStatusDescription(`removed ${downloadedFile.path} from tmp`)
-    );
+  if (resource) {
+    await fs.unlink(resource.path, () => importer.log("clean", resource.path));
   }
 };
 
-const processRecords = async (contentService, contentQuery) => {
-  const response = await getRecords(status.currentPage);
+const processRecord = async (record, uid) => {
+  importer.log("processing", record.uuid);
+
+  const existedRecord = await findRecord(uid, record);
+
+  if (existedRecord) {
+    importer.log("already exists", record.uuid);
+    return;
+  }
+
+  await persistRecord(uid, record);
+};
+
+const processRecords = async (uid) => {
+  const response = await getResource(importer.getURL());
+  importer.setTotal(response.count);
 
   const { results } = response;
 
   if (results && Array.isArray(results)) {
     for (let i = 0; i < results.length; i++) {
-      await saveRecord(results[i], contentService, contentQuery);
-      status.processed += 1;
+      if (!importer.isRunning()) {
+        return;
+      }
+      await processRecord(results[i], uid);
+      importer.processed(results[i].uuid);
     }
   }
 
   if (response.next) {
-    status.currentPage = response.next;
-    status.running && processRecords();
+    importer.setURL(response.next);
+    processRecords(uid);
+  } else {
+    importer.stop();
   }
 };
 
-const normalizeModel = (model) => {
-  if (!model) {
-    throw new Error("Content type model cannot be empty");
-  }
+const validateModelUID = (uid) => {
+  validateSchema(strapi.getModel(uid)?.attributes);
 
-  if (model.split("::").length > 1) {
-    return model;
-  }
-
-  if (model.split(".").length > 1) {
-    return `api::${model}`;
-  }
-
-  return `api::${model}.${model}`;
-};
-
-const getContentService = (modelId) => {
-  const contentService = strapi.service(modelId);
-
-  if (!contentService) {
+  if (!strapi.service(uid)) {
     throw new Error("Related Service could not be found");
   }
 
-  return contentService;
-};
-
-const getContentQuery = (modelId) => {
-  const contentService = strapi.query(modelId);
-
-  if (!contentService) {
-    throw new Error("Related Service could not be found");
+  if (!strapi.query(uid)) {
+    throw new Error("Related Query could not be found");
   }
-
-  return contentService;
 };
-
-const tempFilePath = (url) => path.join(os.tmpdir(), filename(url));
 
 module.exports = {
   async import(ctx) {
     try {
       const { model } = ctx.request.body;
 
-      const modelId = normalizeModel(model);
+      const uid = modelUID(model);
+      validateModelUID(uid);
 
-      validateSchema(strapi.getModel(modelId)?.attributes);
+      run(uid);
 
-      const contentService = getContentService(modelId);
-      const contentQuery = getContentQuery(modelId);
-      const r = await contentQuery.findMany({
-        where: {
-          uuid: "0002ee54-2300-4019-8c32-8335f527f54d",
-        },
-      });
-
-      run(contentService, contentQuery);
-
-      ctx.body = { ...status };
+      ctx.body = importer.get(true);
     } catch (e) {
       ctx.badRequest(e.message);
     }
   },
+
   async report(ctx) {
-    ctx.body = { ...status };
-    status.description = status.description.slice(-10);
+    ctx.body = importer.get(true);
   },
+
   async stop(ctx) {
-    stop();
-    ctx.body = { ...status };
+    importer.stop();
+    ctx.body = importer.get();
   },
 };

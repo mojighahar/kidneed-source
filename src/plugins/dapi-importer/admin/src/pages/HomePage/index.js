@@ -1,15 +1,9 @@
-/*
- *
- * HomePage
- *
- */
+// jshint ignore: start
 
 import React, { memo, useState, useEffect } from "react";
-import axios from "axios";
 // import PropTypes from 'prop-types';
 import pluginId from "../../pluginId";
 import { Box } from "@strapi/design-system/Box";
-import { request } from "@strapi/helper-plugin";
 
 import { BaseHeaderLayout } from "@strapi/design-system/Layout";
 import { Typography } from "@strapi/design-system/Typography";
@@ -17,90 +11,145 @@ import { TextInput } from "@strapi/design-system/TextInput";
 import { Stack } from "@strapi/design-system/Stack";
 import { Button } from "@strapi/design-system/Button";
 import { Grid, GridItem } from "@strapi/design-system/Grid";
+import Section from "../../components/section/section";
 
 import { Alert } from "@strapi/design-system/Alert";
+import useImport from "../../hooks/use-import";
 
 const HomePage = () => {
   const [model, setModel] = useState("");
-  const [report, setReport] = useState("");
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  async function getReport(first = false) {
-    try {
-      first && setLoading(true);
-      const report = await request("/dapi-importer/report", {
-        method: "GET",
-      });
-      setReport(report);
-    } catch (e) {
-      setError(e.response?.payload?.error?.message || e.message);
-    }
-    first && setLoading(false);
-  }
-
-  async function stopImport() {
-    try {
-      setLoading(true);
-      const report = await request("/dapi-importer/stop", {
-        method: "POST",
-      });
-      setReport(report);
-    } catch (e) {
-      setError(e.response?.payload?.error?.message || e.message);
-    }
-    setLoading(false);
-  }
+  const [logPool, setLogPool] = useState([]);
+  const [showLog, setShowLog] = useState([]);
+  const { loading, error, report, startImport, stopImport, clearError } =
+    useImport();
 
   useEffect(() => {
-    getReport();
+    if (report?.uid) {
+      setModel(report.uid);
+    }
 
-    const id = setInterval(getReport, 5000);
+    if (report?.logs.length > 0) {
+      fillLogPool(report.logs);
+    }
+  }, [report]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (logPool.length < 1) {
+        return;
+      }
+
+      let count = Math.floor(logPool.length / 10) || 1;
+      if (!report.running) {
+        count = logPool.length;
+      }
+
+      const newLogs = logPool.slice(0, count);
+      setLogPool(logPool.slice(count));
+      setShowLog([...showLog.slice(-200), ...newLogs]);
+    }, 200);
 
     return () => clearInterval(id);
-  }, []);
+  }, [logPool, report]);
 
-  async function importData() {
-    try {
-      setError(null);
-      setLoading(true);
-      const report = await request("/dapi-importer/import", {
-        method: "POST",
-        body: { model },
-      });
-      setReport(report);
-    } catch (e) {
-      setError(e.response?.payload?.error?.message || e.message);
-    }
-    setLoading(false);
-  }
-
-  function startImport() {
-    importData();
+  function fillLogPool(logs) {
+    setLogPool([...logPool, ...logs]);
   }
 
   const Report = () => {
-    if (!report.running) {
+    if (!report) {
       return null;
     }
 
     return (
-      <Box
-        background="neutral0"
-        padding={6}
-        hasRadius
-        shadow="tableShadow"
-        hiddenXS
-        borderWidth="2px"
+      <Section
+        title={report.running ? "Report - Running" : "Report - Not Running"}
       >
-        <Stack size={4}>
-          {report.description.map((description) => (
-            <Typography key={description} variant="omega">
-              {description}
-            </Typography>
-          ))}
-        </Stack>
-      </Box>
+        <Grid alignItems="end" gap={5} gridCols={12}>
+          <GridItem col={3} s={12}>
+            <Stack size={4}>
+              <Typography marginBottom={4} variant="delta">
+                Total
+              </Typography>
+              <Typography marginBottom={4} variant="omega">
+                {report.total || "NA"}
+              </Typography>
+            </Stack>
+          </GridItem>
+          <GridItem col={3} s={12}>
+            <Stack size={4}>
+              <Typography marginBottom={4} variant="delta">
+                Processed
+              </Typography>
+              <Typography marginBottom={4} variant="omega">
+                {report.processed}
+              </Typography>
+            </Stack>
+          </GridItem>
+          <GridItem col={3} s={12}>
+            <Stack size={4}>
+              <Typography marginBottom={4} variant="delta">
+                Persisted
+              </Typography>
+              <Typography marginBottom={4} variant="omega">
+                {report.persisted}
+              </Typography>
+            </Stack>
+          </GridItem>
+          <GridItem col={3} s={12}>
+            <Stack size={4}>
+              <Typography marginBottom={4} variant="delta">
+                Progress
+              </Typography>
+              <Typography marginBottom={4} variant="omega">
+                {report.total > 0
+                  ? Math.floor((report.processed * 100) / report.total)
+                  : "-"}
+                %
+              </Typography>
+            </Stack>
+          </GridItem>
+          <GridItem col={7} s={12}>
+            <Stack size={4} horizontal></Stack>
+          </GridItem>
+        </Grid>
+      </Section>
+    );
+  };
+
+  const Logs = () => {
+    if (!report) {
+      return null;
+    }
+
+    return (
+      <Section title="Logs">
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column-reverse",
+            maxHeight: "200px",
+            overflowY: "scroll",
+          }}
+        >
+          <Stack size={4} maxHeight={200}>
+            <ul>
+              {showLog.map((log) => (
+                <li key={log.uuid}>
+                  <Typography
+                    textColor={
+                      log.type === "error" ? "danger500" : "neutral900"
+                    }
+                    variant="omega"
+                  >
+                    {log.title}:{log.body}
+                  </Typography>
+                </li>
+              ))}
+            </ul>
+          </Stack>
+        </div>
+      </Section>
     );
   };
 
@@ -113,61 +162,62 @@ const HomePage = () => {
           as="h2"
         />
       </Box>
-
-      <Box paddingLeft={10} paddingRight={10}>
-        <Box
-          background="neutral0"
-          padding={6}
-          hasRadius
-          shadow="tableShadow"
-          hiddenXS
-          borderWidth="2px"
-        >
-          <Stack size={4}>
-            <Typography marginBottom={4} variant="delta">
-              Import Records
-            </Typography>
-            <Grid alignItems="end" gap={5} gridCols={12}>
-              <GridItem col={6} s={12}>
-                <TextInput
-                  placeholder="This is a content placeholder"
-                  label="Content Type Name"
-                  name="model"
-                  hint="please fill the input with your related model to dapi"
-                  onChange={(e) => setModel(e.target.value)}
-                  value={model}
-                />
-              </GridItem>
-              <GridItem col={7} s={12}>
-                <Stack size={4} horizontal>
-                  <Button
-                    disabled={model.length < 3 || loading || report.running}
-                    size="S"
-                    loading={loading}
-                    onClick={startImport}
-                  >
-                    Start
-                  </Button>
-                  <Button
-                    disabled={loading || !report.running}
-                    size="S"
-                    loading={loading}
-                    onClick={stopImport}
-                  >
-                    Stop
-                  </Button>
-                </Stack>
-              </GridItem>
-            </Grid>
-            {error && (
-              <Alert variant="danger" closeLabel="Close alert" title="Error">
-                {error}
-              </Alert>
-            )}
-            <Report />
-          </Stack>
-        </Box>
-      </Box>
+      <Section title="Import Records">
+        <Grid alignItems="end" gap={5} gridCols={12}>
+          <GridItem col={6} s={12}>
+            <TextInput
+              placeholder="This is a content placeholder"
+              label="Content Type Name"
+              name="model"
+              hint="please fill the input with your related model to dapi"
+              onChange={(e) => setModel(e.target.value)}
+              value={model}
+            />
+          </GridItem>
+          <GridItem col={7} s={12}>
+            <Stack size={4} horizontal>
+              <Button
+                disabled={model.length < 3 || loading || report?.running}
+                size="S"
+                loading={loading}
+                onClick={() => startImport(model)}
+              >
+                {report?.uid ? "Continue" : "Start"}
+              </Button>
+              <Button
+                disabled={loading || !report?.running}
+                size="S"
+                loading={loading}
+                onClick={stopImport}
+              >
+                Stop
+              </Button>
+              {report?.uid && (
+                <Button
+                  disabled={model.length < 3 || loading || report?.running}
+                  size="S"
+                  loading={loading}
+                  onClick={stopImport}
+                >
+                  Restart
+                </Button>
+              )}
+            </Stack>
+          </GridItem>
+        </Grid>
+        {error && (
+          <Alert
+            variant="danger"
+            closeLabel="Close Error"
+            title="Error"
+            onClose={clearError}
+          >
+            {error}
+          </Alert>
+        )}
+      </Section>
+      <Report />
+      <Logs />
     </>
   );
 };
