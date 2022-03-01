@@ -40,6 +40,7 @@ export default function useImport() {
         body: { model },
       });
       setReport(report);
+      setTimeout(getReport, 1000);
     } catch (e) {
       setError(e.response?.payload?.error?.message || e.message);
     }
@@ -59,6 +60,19 @@ export default function useImport() {
     setLoading(false);
   });
 
+  const resetImport = useCallback(async () => {
+    try {
+      setLoading(true);
+      const report = await request("/dapi-importer/reset", {
+        method: "POST",
+      });
+      setReport(report);
+    } catch (e) {
+      setError(e.response?.payload?.error?.message || e.message);
+    }
+    setLoading(false);
+  });
+
   const clearError = useCallback(() => {
     setError(null);
   });
@@ -69,6 +83,7 @@ export default function useImport() {
     loading,
     startImport,
     stopImport,
+    resetImport,
     clearError,
   };
 }

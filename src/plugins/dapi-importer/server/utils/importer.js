@@ -7,10 +7,11 @@ function Importer(url) {
     total: null,
     processed: 0,
     persisted: 0,
+    startURL: url,
     currentURL: url,
     lastRun: null,
+    finishedAt: null,
     logs: [],
-    lastGet: Date.now(),
   };
 
   function run(uid) {
@@ -21,6 +22,26 @@ function Importer(url) {
     status.uid = uid;
     status.lastRun = new Date();
     status.running = true;
+  }
+
+  function finish() {
+    status.running = false;
+    status.finishedAt = new Date();
+  }
+
+  function reset() {
+    status = {
+      running: false,
+      uid: null,
+      total: null,
+      processed: 0,
+      persisted: 0,
+      startURL: status.startURL,
+      currentURL: status.startURL,
+      lastRun: null,
+      finishedAt: null,
+      logs: [],
+    };
   }
 
   function log(title, body, type = "info") {
@@ -76,6 +97,8 @@ function Importer(url) {
     getURL,
     setURL,
     setTotal,
+    finish,
+    reset,
   };
 }
 

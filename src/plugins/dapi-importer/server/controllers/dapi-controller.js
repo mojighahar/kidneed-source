@@ -102,7 +102,7 @@ const processRecords = async (uid) => {
     importer.setURL(response.next);
     processRecords(uid);
   } else {
-    importer.stop();
+    importer.finish();
   }
 };
 
@@ -140,6 +140,11 @@ module.exports = {
 
   async stop(ctx) {
     importer.stop();
+    ctx.body = importer.get();
+  },
+
+  async reset(ctx) {
+    importer.reset();
     ctx.body = importer.get();
   },
 };

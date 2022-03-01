@@ -20,8 +20,15 @@ const HomePage = () => {
   const [model, setModel] = useState("");
   const [logPool, setLogPool] = useState([]);
   const [showLog, setShowLog] = useState([]);
-  const { loading, error, report, startImport, stopImport, clearError } =
-    useImport();
+  const {
+    loading,
+    error,
+    report,
+    startImport,
+    stopImport,
+    resetImport,
+    clearError,
+  } = useImport();
 
   useEffect(() => {
     if (report?.uid) {
@@ -61,10 +68,16 @@ const HomePage = () => {
       return null;
     }
 
+    let title = "Report - Not Running";
+    if (report.running) {
+      title = "Report - Running";
+    }
+    if (report.finishedAt) {
+      title = "Report - Finished";
+    }
+
     return (
-      <Section
-        title={report.running ? "Report - Running" : "Report - Not Running"}
-      >
+      <Section title={title}>
         <Grid alignItems="end" gap={5} gridCols={12}>
           <GridItem col={3} s={12}>
             <Stack size={4}>
@@ -109,8 +122,15 @@ const HomePage = () => {
               </Typography>
             </Stack>
           </GridItem>
-          <GridItem col={7} s={12}>
-            <Stack size={4} horizontal></Stack>
+          <GridItem col={3} s={12}>
+            <Stack size={4}>
+              <Typography marginBottom={4} variant="delta">
+                Last run
+              </Typography>
+              <Typography marginBottom={4} variant="omega">
+                {report.lastRun || "-"}
+              </Typography>
+            </Stack>
           </GridItem>
         </Grid>
       </Section>
@@ -194,12 +214,12 @@ const HomePage = () => {
               </Button>
               {report?.uid && (
                 <Button
-                  disabled={model.length < 3 || loading || report?.running}
+                  disabled={loading}
                   size="S"
                   loading={loading}
-                  onClick={stopImport}
+                  onClick={resetImport}
                 >
-                  Restart
+                  Reset
                 </Button>
               )}
             </Stack>

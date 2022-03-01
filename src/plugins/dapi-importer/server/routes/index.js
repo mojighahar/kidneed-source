@@ -23,4 +23,12 @@ module.exports = [
       policies: [],
     },
   },
+  {
+    method: "POST",
+    path: "/reset",
+    handler: "dapiController.reset",
+    config: {
+      policies: [],
+    },
+  },
 ];
