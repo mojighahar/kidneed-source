@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { request } from "@strapi/helper-plugin";
 
-export default function useImport() {
+export default function useImport(prefix) {
   const [report, setReport] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -19,8 +19,8 @@ export default function useImport() {
       if (firstTime) {
         setLoading(true);
       }
-      const report = await request("/dapi-importer/report", {
-        method: "GET",
+      const report = await request(`/dapi-importer/${prefix}/report`, {
+        method: `GET`,
       });
       setReport(report);
     } catch (e) {
@@ -35,8 +35,8 @@ export default function useImport() {
     try {
       setError(null);
       setLoading(true);
-      const report = await request("/dapi-importer/import", {
-        method: "POST",
+      const report = await request(`/dapi-importer/${prefix}/start`, {
+        method: `POST`,
         body: { model },
       });
       setReport(report);
@@ -50,8 +50,8 @@ export default function useImport() {
   const stopImport = useCallback(async () => {
     try {
       setLoading(true);
-      const report = await request("/dapi-importer/stop", {
-        method: "POST",
+      const report = await request(`/dapi-importer/${prefix}/stop`, {
+        method: `POST`,
       });
       setReport(report);
     } catch (e) {
@@ -63,8 +63,8 @@ export default function useImport() {
   const resetImport = useCallback(async () => {
     try {
       setLoading(true);
-      const report = await request("/dapi-importer/reset", {
-        method: "POST",
+      const report = await request(`/dapi-importer/${prefix}/reset`, {
+        method: `POST`,
       });
       setReport(report);
     } catch (e) {

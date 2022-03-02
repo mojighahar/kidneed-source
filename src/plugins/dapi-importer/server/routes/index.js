@@ -1,34 +1,27 @@
+const baseRoute = (prefix, controller) => [
+  {
+    method: `POST`,
+    path: `/${prefix}/start`,
+    handler: `${controller}.import`,
+  },
+  {
+    method: `GET`,
+    path: `/${prefix}/report`,
+    handler: `${controller}.report`,
+  },
+  {
+    method: `POST`,
+    path: `/${prefix}/stop`,
+    handler: `${controller}.stop`,
+  },
+  {
+    method: `POST`,
+    path: `/${prefix}/reset`,
+    handler: `${controller}.reset`,
+  },
+];
+
 module.exports = [
-  {
-    method: "POST",
-    path: "/import",
-    handler: "dapiController.import",
-    config: {
-      policies: [],
-    },
-  },
-  {
-    method: "GET",
-    path: "/report",
-    handler: "dapiController.report",
-    config: {
-      policies: [],
-    },
-  },
-  {
-    method: "POST",
-    path: "/stop",
-    handler: "dapiController.stop",
-    config: {
-      policies: [],
-    },
-  },
-  {
-    method: "POST",
-    path: "/reset",
-    handler: "dapiController.reset",
-    config: {
-      policies: [],
-    },
-  },
+  ...baseRoute("import", "importController"),
+  ...baseRoute("download", "downloadController"),
 ];

@@ -28,7 +28,7 @@ const HomePage = () => {
     stopImport,
     resetImport,
     clearError,
-  } = useImport();
+  } = useImport("import");
 
   useEffect(() => {
     if (report?.uid) {

@@ -58,7 +58,7 @@ function Importer(url) {
   }
 
   function persisted(resource) {
-    status.saved += 1;
+    status.persisted += 1;
     log("persisted", resource);
   }
 

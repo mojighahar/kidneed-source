@@ -1,7 +1,9 @@
 "use strict";
 
-const dapiController = require("./dapi-controller");
+const importController = require("./import-controller");
+const downloadController = require("./download-controller");
 
 module.exports = {
-  dapiController,
+  importController,
+  downloadController,
 };
