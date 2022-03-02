@@ -41,7 +41,7 @@ const findRecord = async (uid, record) => {
 };
 
 const persistRecord = async (uid, record) => {
-  const resource = await fileInfo(record.src_file);
+  // const resource = await fileInfo(record.src_file);
   const params = {
     data: {
       uuid: record.uuid,
@@ -53,20 +53,21 @@ const persistRecord = async (uid, record) => {
       meta: record.metadata,
       source: record.source,
       sourceUrl: record.source_url,
+      srcFile: record.src_file,
       publishedAt: record.event_available ? new Date() : null,
     },
   };
 
-  if (resource) {
-    params.files = [resource];
-  }
+  // if (resource) {
+  //   params.files = [resource];
+  // }
 
   await strapi.service(uid).create(params);
   importer.persisted(record.uuid);
 
-  if (resource) {
-    await fs.unlink(resource.path, () => importer.log("clean", resource.path));
-  }
+  // if (resource) {
+  //   await fs.unlink(resource.path, () => importer.log("clean", resource.path));
+  // }
 };
 
 const processRecord = async (record, uid) => {

@@ -17,6 +17,7 @@ module.exports = (schema) => {
     "source",
     "sourceUrl",
     "ageCategory",
+    "srcFile",
   ];
 
   const absents = presentFields.filter((field) => !(field in schema));
@@ -37,6 +38,7 @@ module.exports = (schema) => {
     source: "string",
     sourceUrl: "string",
     ageCategory: "integer",
+    srcFile: "string",
   };
 
   const mismatchedTypes = presentFields.filter(
