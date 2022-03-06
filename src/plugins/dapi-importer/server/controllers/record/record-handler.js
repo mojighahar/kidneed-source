@@ -7,7 +7,7 @@ const downloadResource = require("../../utils/download-resource");
 const find = async (record, uid) => {
   const result = await strapi
     .query(uid)
-    .findMany({ where: { uuid: record.uuid } });
+    .findMany({ where: { uuid: record.uuid }, populate: ["attachments"] });
 
   return result.length > 0 ? result[0] : null;
 };
@@ -46,16 +46,25 @@ const create = async (record, uid, importer) => {
   await persist(record, uid, importer);
 };
 
-const download = async (uid, record, importer) => {
-  if (!record.src_file) {
+const download = async (record, uid, importer) => {
+  const url = record.src_file;
+  if (!url) {
     return;
   }
 
   const found = await find(record, uid);
-
   importer.log("downloading", url);
+
   if (!found) {
     importer.log("resource not found", record.uuid, "error");
+    return;
+  }
+
+  if (
+    found.attachments &&
+    found.attachments.some((attachment) => url.includes(attachment.name))
+  ) {
+    importer.log("resource already downloaded", url);
     return;
   }
 
@@ -72,33 +81,40 @@ const download = async (uid, record, importer) => {
     return;
   }
 
-  await strapi.service(uid).update({ files: [resource] }, record.id);
+  await strapi
+    .service(uid)
+    .update(found.id, { files: { attachments: [resource] } });
   importer.persisted(record.uuid);
 
   await fs.unlink(resource.path, () => importer.log("clean", resource.path));
 };
 
 const loopRecords = async (uid, importer, handler) => {
-  const response = await getResource(importer.getURL());
-  importer.setTotal(response.count);
+  try {
+    const response = await getResource(importer.getURL());
+    importer.setTotal(response.count);
 
-  const { results } = response;
+    const { results } = response;
 
-  if (results && Array.isArray(results)) {
-    for (let i = 0; i < results.length; i++) {
-      if (!importer.isRunning()) {
-        return;
+    if (results && Array.isArray(results)) {
+      for (let i = 0; i < results.length; i++) {
+        if (!importer.isRunning()) {
+          return;
+        }
+        await handler(results[i], uid, importer);
+        importer.processed(results[i].uuid);
       }
-      await handler(results[i], uid, importer);
-      importer.processed(results[i].uuid);
     }
-  }
 
-  if (response.next) {
-    importer.setURL(response.next);
-    loopRecords(uid, importer, handler);
-  } else {
-    importer.finish();
+    if (response.next) {
+      importer.setURL(response.next);
+      loopRecords(uid, importer, handler);
+    } else {
+      importer.finish();
+    }
+  } catch (e) {
+    importer.log("ERROR", e.message, "error");
+    importer.stop();
   }
 };
 
