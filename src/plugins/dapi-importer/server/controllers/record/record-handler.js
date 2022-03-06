@@ -19,7 +19,7 @@ const persist = async (record, uid, importer) => {
       title: record.title_fa,
       suitableFor: "both",
       type: record.content_type.toLowerCase(),
-      ageCategory: record.ageCategory,
+      ageCategory: record.age_category,
       description: record.description,
       meta: record.metadata,
       source: record.source,
