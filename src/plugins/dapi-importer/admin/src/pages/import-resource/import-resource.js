@@ -9,7 +9,7 @@ import { Stack } from "@strapi/design-system/Stack";
 import { Button } from "@strapi/design-system/Button";
 import { Grid, GridItem } from "@strapi/design-system/Grid";
 import Section from "../../components/section/section";
-import Logs from "../../components/logs/logs";
+import Logs from "../../components/monitor/monitor";
 import Report from "../../components/report/report";
 
 import { Alert } from "@strapi/design-system/Alert";
