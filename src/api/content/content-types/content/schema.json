@@ -120,6 +120,12 @@
         }
       },
       "type": "string"
+    },
+    "editions": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::edition.edition",
+      "mappedBy": "content"
     }
   }
 }

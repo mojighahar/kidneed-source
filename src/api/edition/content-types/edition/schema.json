@@ -4,7 +4,8 @@
   "info": {
     "singularName": "edition",
     "pluralName": "editions",
-    "displayName": "edition"
+    "displayName": "edition",
+    "description": ""
   },
   "options": {
     "draftAndPublish": true
@@ -41,6 +42,12 @@
       "required": true,
       "max": 15,
       "min": 0
+    },
+    "content": {
+      "type": "relation",
+      "relation": "manyToOne",
+      "target": "api::content.content",
+      "inversedBy": "editions"
     }
   }
 }
