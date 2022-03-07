@@ -1,9 +1,11 @@
 const validateModelUID = require("./validations/validate-model");
 const modelUID = require("../utils/model-uid");
+const path = require("path");
 
 const createImportController = (importer, run) => ({
   async import(ctx) {
     try {
+      console.log({ tmpDir: os.tmpdir() });
       const { model } = ctx.request.body;
 
       const uid = modelUID(model);

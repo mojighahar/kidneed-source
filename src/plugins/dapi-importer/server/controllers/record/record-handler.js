@@ -81,10 +81,14 @@ const download = async (record, uid, importer) => {
     return;
   }
 
-  await strapi
-    .service(uid)
-    .update(found.id, { files: { attachments: [resource] } });
-  importer.persisted(record.uuid);
+  try {
+    await strapi
+      .service(uid)
+      .update(found.id, { files: { attachments: [resource] } });
+    importer.persisted(record.uuid);
+  } catch (e) {
+    importer.log("Error", `cannot update ${record.uuid}`, "error");
+  }
 
   await fs.unlink(resource.path, () => importer.log("clean", resource.path));
 };
