@@ -53,7 +53,6 @@ const download = async (record, uid, importer) => {
   }
 
   const found = await find(record, uid);
-  importer.log("downloading", url);
 
   if (!found) {
     importer.log("resource not found", record.uuid, "error");
@@ -70,6 +69,7 @@ const download = async (record, uid, importer) => {
 
   let resource;
   try {
+    importer.log("downloading", url);
     resource = await downloadResource(url);
   } catch (e) {
     importer.log("download failed", `${url}(${e.message})`, "error");

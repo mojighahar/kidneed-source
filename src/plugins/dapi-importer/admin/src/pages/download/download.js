@@ -62,8 +62,6 @@ const Download = () => {
     setLogPool([...logPool, ...logs]);
   }
 
-  console.log(showLog.map((l) => l.uuid));
-
   return (
     <>
       <Box background="neutral100">
