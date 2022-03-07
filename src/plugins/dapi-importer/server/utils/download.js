@@ -21,6 +21,10 @@ async function download(url, dest, repeat = 0, err = null) {
       .on("error", function (err) {
         fs.unlink(dest, () => download(url, dest, repeat + 1, err));
       });
+
+    file.on("error", (err) => {
+      fs.unlink(dest, () => reject(err.message));
+    });
   });
 }
 
