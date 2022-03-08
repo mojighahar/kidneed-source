@@ -1,0 +1,28 @@
+{
+  "name": "bulk-publisher",
+  "version": "0.0.0",
+  "description": "This is the description of the plugin.",
+  "strapi": {
+    "name": "bulk-publisher",
+    "description": "Description of bulk-publisher plugin",
+    "kind": "plugin"
+  },
+  "dependencies": {
+    "jsoneditor": "^9.7.3",
+    "jsoneditor-react": "^3.1.2",
+    "qs": "^6.10.3"
+  },
+  "author": {
+    "name": "A Strapi developer"
+  },
+  "maintainers": [
+    {
+      "name": "A Strapi developer"
+    }
+  ],
+  "engines": {
+    "node": ">=12.x.x <=16.x.x",
+    "npm": ">=6.0.0"
+  },
+  "license": "MIT"
+}
