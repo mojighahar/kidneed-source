@@ -2,7 +2,7 @@
 module.exports = {
   async index(ctx) {
     const videos = await strapi.query("api::content.content").findMany({
-      where: { type: "video" },
+      where: { type: "video", publishedAt: { $not: null } },
       select: ["id", "uuid", "title", "meta"],
     });
 
