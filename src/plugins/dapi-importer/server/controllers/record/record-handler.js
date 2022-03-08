@@ -33,12 +33,23 @@ const persist = async (record, uid, importer) => {
   importer.persisted(record.uuid);
 };
 
+const syncPublish = async (record, uid, id) => {
+  await strapi.service(uid).update(id, {
+    data: { publishedAt: record.event_available ? new Date() : null },
+  });
+};
+
 const create = async (record, uid, importer) => {
   importer.log("processing", record.uuid);
 
   const found = await find(record, uid);
 
   if (found) {
+    if (!!found.publishedAt !== !!record.event_available) {
+      await syncPublish(record, uid, found.id);
+      importer.log("synced publish", record.uuid);
+    }
+
     importer.log("already exists", record.uuid);
     return;
   }
