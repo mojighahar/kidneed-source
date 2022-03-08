@@ -126,6 +126,12 @@
       "relation": "oneToMany",
       "target": "api::edition.edition",
       "mappedBy": "content"
+    },
+    "movies": {
+      "type": "relation",
+      "relation": "oneToMany",
+      "target": "api::movie.movie",
+      "mappedBy": "content"
     }
   }
 }
