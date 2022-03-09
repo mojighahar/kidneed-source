@@ -14,11 +14,11 @@ module.exports = ({ env }) => ({
     },
   },
   "dapi-importer": {
-    enabled: true,
+    enabled: false,
     resolve: "./src/plugins/dapi-importer",
   },
   "bulk-publisher": {
-    enabled: true,
+    enabled: false,
     resolve: "./src/plugins/bulk-publisher",
   },
 });
