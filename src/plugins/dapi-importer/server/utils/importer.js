@@ -14,9 +14,14 @@ function Importer(url) {
     logs: [],
   };
 
-  function run(uid) {
+  function run(uid, url) {
     if (status.running) {
       return;
+    }
+
+    if (url) {
+      status.startURL = url;
+      status.currentURL = url;
     }
 
     status.uid = uid;

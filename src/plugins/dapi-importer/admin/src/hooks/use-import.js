@@ -31,13 +31,13 @@ export default function useImport(prefix) {
     }
   }
 
-  const startImport = useCallback(async (model) => {
+  const startImport = useCallback(async (model, filter) => {
     try {
       setError(null);
       setLoading(true);
       const report = await request(`/dapi-importer/${prefix}/start`, {
         method: `POST`,
-        body: { model },
+        body: { model, filter },
       });
       setReport(report);
       setTimeout(getReport, 1000);

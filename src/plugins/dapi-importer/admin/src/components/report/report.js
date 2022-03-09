@@ -69,6 +69,16 @@ export default function Report({ report }) {
             </Typography>
           </Stack>
         </GridItem>
+        <GridItem col={9} s={12}>
+          <Stack size={4}>
+            <Typography marginBottom={4} variant="delta">
+              current url
+            </Typography>
+            <Typography marginBottom={4} variant="omega">
+              {report.currentURL || "-"}
+            </Typography>
+          </Stack>
+        </GridItem>
       </Grid>
     </Section>
   );

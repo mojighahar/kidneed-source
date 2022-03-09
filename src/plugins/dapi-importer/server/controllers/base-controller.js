@@ -5,13 +5,16 @@ const os = require("os");
 const createImportController = (importer, run) => ({
   async import(ctx) {
     try {
-      console.log({ tmpDir: os.tmpdir() });
-      const { model } = ctx.request.body;
+      const { model, filter } = ctx.request.body;
 
       const uid = modelUID(model);
       validateModelUID(uid);
 
-      run(uid);
+      const url = `https://dapi.kidneed.ir/dev/content/?format=json${
+        filter ? "&" + filter : ""
+      }`;
+
+      run(uid, url);
 
       ctx.body = importer.get(true);
     } catch (e) {

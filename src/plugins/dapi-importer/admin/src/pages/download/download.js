@@ -17,6 +17,7 @@ import useImport from "../../hooks/use-import";
 
 const Download = () => {
   const [model, setModel] = useState("");
+  const [filter, setFilter] = useState("");
   const [logPool, setLogPool] = useState([]);
   const [showLog, setShowLog] = useState([]);
   const {
@@ -83,13 +84,22 @@ const Download = () => {
               value={model}
             />
           </GridItem>
+          <GridItem col={6} s={12}>
+            <TextInput
+              placeholder="This is a filter"
+              label="filter query"
+              name="filter"
+              onChange={(e) => setFilter(e.target.value)}
+              value={filter}
+            />
+          </GridItem>
           <GridItem col={7} s={12}>
             <Stack size={4} horizontal>
               <Button
                 disabled={model.length < 3 || loading || report?.running}
                 size="S"
                 loading={loading}
-                onClick={() => startImport(model)}
+                onClick={() => startImport(model, filter)}
               >
                 {report?.uid ? "Continue" : "Start"}
               </Button>
