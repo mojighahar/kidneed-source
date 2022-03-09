@@ -20,10 +20,11 @@ module.exports = {
     return { result };
   },
   async publishVideo(ctx) {
-    const { aliases, maxDuration, minDuration, count } = ctx.request.body;
+    const { aliases, maxDuration, minDuration, count, ageCategory } =
+      ctx.request.body;
 
     let videos = await strapi.query("api::content.content").findMany({
-      where: { type: "video" },
+      where: { type: "video", ageCategory },
       select: ["id", "meta"],
     });
 
