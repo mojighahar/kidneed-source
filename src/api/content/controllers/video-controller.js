@@ -13,6 +13,7 @@ module.exports = {
         id: v.id,
         uuid: v.uuid,
         title: v.title,
+        meta: v.meta,
         duration,
       };
     });
