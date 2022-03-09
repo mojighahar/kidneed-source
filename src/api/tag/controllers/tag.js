@@ -6,8 +6,10 @@
 
 const { createCoreController } = require("@strapi/strapi").factories;
 
-module.exports = createCoreController("api::tag.tag", () => ({
+module.exports = createCoreController("api::tag.tag", ({ strapi }) => ({
   async find(ctx) {
-    strapi.query("api::tag.tag").findMany();
-  },
+    const data = await strapi.query("api::tag.tag").findMany();
+
+    return { data };
+  }
 }));
