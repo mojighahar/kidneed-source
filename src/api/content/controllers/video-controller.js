@@ -30,12 +30,13 @@ module.exports = {
     videos = videos.filter((video) => {
       const alias = video.meta?.alias?.slice(1);
       const duration = video.meta?.duration;
-      if (!alias || !duration) {
+
+      if (alias === null || duration === null) {
         return false;
       }
 
       return (
-        aliases.includes(alias.slice(1)) &&
+        aliases.includes(alias) &&
         duration >= minDuration &&
         duration <= maxDuration
       );
