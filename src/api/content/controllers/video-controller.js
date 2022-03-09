@@ -3,7 +3,8 @@ module.exports = {
   async index(ctx) {
     const videos = await strapi.query("api::content.content").findMany({
       where: { type: "video", publishedAt: { $not: null } },
-      select: ["id", "uuid", "title", "meta"],
+      select: ["id", "uuid", "title", "meta", "ageCategory"],
+      sort: ['ageCategory:desc'],
     });
 
     const result = videos.map((v) => {
@@ -13,6 +14,8 @@ module.exports = {
         id: v.id,
         uuid: v.uuid,
         title: v.title,
+        ageCategory: v.ageCategory,
+        meta: v.meta,
         duration,
       };
     });
