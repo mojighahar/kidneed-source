@@ -2,14 +2,14 @@
 
 const contentTypes = {
   0: "book",
-  1: "game",
-  2: "audio",
+  1: "audio",
+  2: "game",
 };
 
 const fetchData = async (type, limit) => {
   return await strapi.query("api::content.content").findMany({
     where: { type },
-    select: ["id"],
+    select: ["id", "meta"],
     limit,
   });
 };
@@ -47,7 +47,7 @@ module.exports = {
             type: contentType,
             duration:
               contentType == "audio"
-                ? contents[contentType][Math.floor(i / 3) * 2]?.chapter.reduce(
+                ? contents[contentType][Math.floor(i / 3) * 2]?.meta.chapters.reduce(
                     (sum, item) => sum + item?.duration,
                     0
                   )
