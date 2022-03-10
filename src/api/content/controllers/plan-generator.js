@@ -6,9 +6,10 @@ const contentTypes = {
   2: "game",
 };
 
-const fetchData = async (type, limit) => {
+const fetchData = async (type, limit, where) => {
+  where = where || {};
   return await strapi.query("api::content.content").findMany({
-    where: { type },
+    where: { type, ...where },
     select: ["id", "meta"],
     limit,
   });
@@ -17,12 +18,17 @@ const fetchData = async (type, limit) => {
 module.exports = {
   async generate(ctx) {
     const daysCount = parseInt(ctx.request.query.daysCount) || 30;
+    const age = parseInt(ctx.request.query.age) || 3;
     const contents = {
       video: await fetchData("video", daysCount * 2),
       activity: await fetchData("activity", daysCount * 2),
-      book: await fetchData("book", Math.floor((daysCount / 3) * 3)),
-      audio: await fetchData("audio", Math.floor((daysCount / 3) * 3)),
-      game: await fetchData("game", Math.floor((daysCount / 3) * 3)),
+      book: await fetchData("book", Math.max(Math.floor(daysCount / 3), 1) * 2, {
+        ageCategory: age,
+      }),
+      audio: await fetchData("audio", Math.max(Math.floor(daysCount / 3), 1) * 2),
+      game: await fetchData("game", Math.max(Math.floor(daysCount / 3), 1) * 2, {
+        ageCategory: age,
+      }),
     };
 
     const plan = [];
@@ -47,7 +53,9 @@ module.exports = {
             type: contentType,
             duration:
               contentType == "audio"
-                ? contents[contentType][Math.floor(i / 3) * 2]?.meta.chapters.reduce(
+                ? contents[contentType][
+                    Math.floor(i / 3) * 2
+                  ]?.meta?.chapters?.reduce(
                     (sum, item) => sum + item?.duration,
                     0
                   )
