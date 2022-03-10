@@ -20,34 +20,41 @@ module.exports = {
     const contents = {
       video: await fetchData("video", daysCount * 2),
       activity: await fetchData("activity", daysCount * 2),
-      book: await fetchData("book", Math.floor((daysCount * 2) / 3)),
-      audio: await fetchData("audio", Math.floor((daysCount * 2) / 3)),
-      game: await fetchData("game", Math.floor((daysCount * 2) / 3)),
+      book: await fetchData("book", Math.floor((daysCount / 3) * 3)),
+      audio: await fetchData("audio", Math.floor((daysCount / 3) * 3)),
+      game: await fetchData("game", Math.floor((daysCount / 3) * 3)),
     };
+    1;
 
     const plan = [];
     for (let i = 0; i < daysCount; i++) {
+      const contentType = contentTypes[i % 3];
       plan.push({
         dayIndex: i,
         contents: [
           {
             type: "video",
-            duration: 1000,
+            duration: contents.video[i * 2].meta.duration,
             content1Id: contents.video[i * 2].id,
             content2Id: contents.video[i * 2 + 1].id,
           },
           {
             type: "activity",
-            duration: 1000,
+            duration: 0,
             content1Id: contents.activity[i * 2].id,
             content2Id: contents.activity[i * 2 + 1].id,
           },
           {
-            type: contentTypes[i % 3],
-            duration: 1000,
-            content1Id: contents[contentTypes[i % 3]][Math.floor(i / 3) * 2].id,
-            content2Id:
-              contents[contentTypes[i % 3]][Math.floor(i / 3) * 2 + 1].id,
+            type: contentType,
+            duration:
+              contentType == "audio"
+                ? contents[contentType][Math.floor(i / 3) * 2]?.chapter.reduce(
+                    (sum, item) => sum + item.duration,
+                    0
+                  )
+                : 0,
+            content1Id: contents[contentType][Math.floor(i / 3) * 2]?.id,
+            content2Id: contents[contentType][Math.floor(i / 3) * 2 + 1]?.id,
           },
         ],
       });
